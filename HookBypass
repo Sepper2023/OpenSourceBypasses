@@ -1,0 +1,36 @@
+--[[
+    Universal Hook Bypass.
+    Credits To '__indexx' On Discord
+    Add to the top of ur script to counter detections
+]]
+
+local HookCache = {}
+local OldHF = getgenv().hookfunction
+local OldHMM = getgenv().hookmetamethod
+
+getgenv().hookfunction = newcclosure(function(Func,New)
+    OldFunc = OldHF(Func,New)
+    
+    HookCache[Func] = OldFunc
+
+    return OldFunc
+end)
+
+getgenv().hookmetamethod = newcclosure(function(Ins,Meta,New)
+    local OldFunc = OldHMM(Ins,Meta,New)
+    local MetaFunc = getrawmetatable(game)[Meta]
+    
+    HookCache[MetaFunc] = OldFunc
+
+    return OldFunc
+end)
+
+OldWrap = hookfunction(coroutine.wrap,function(Func)
+    local Cached = HookCache[Func]
+
+    if Cached then
+        return newcclosure(Cached)
+    end
+
+    return OldWrap(Func)
+end)
